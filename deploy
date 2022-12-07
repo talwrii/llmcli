@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+rm -rf sdist
+rm -rf dist
+rm -rf build
+
+git push origin master:master
+python setup.py sdist
+twine upload dist/* --verbose

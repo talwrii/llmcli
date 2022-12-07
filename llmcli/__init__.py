@@ -9,9 +9,11 @@ PARSER = argparse.ArgumentParser(
     description="Run large language models from the command-line"
 )
 parsers = PARSER.add_subparsers(dest="command")
-chatgpt = parsers.add_parser("chatgpt", help="Set a prompt to a large language model")
-chatgpt.add_argument("--login", action="store_true", help="Login to the API")
-chatgpt.add_argument("prompt", help="Prompt to the model")
+chatgpt_parser = parsers.add_parser(
+    "chatgpt", help="Set a prompt to a large language model"
+)
+chatgpt_parser.add_argument("--login", action="store_true", help="Login to the API")
+chatgpt_parser.add_argument("prompt", help="Prompt to the model", nargs="*")
 
 
 def main():
@@ -39,7 +41,7 @@ def chatgpt(args):
             os.remove(SESSION_FILE)
 
     chat = chatgpt_login()
-    print(chat.get_chat_response(args.prompt))
+    print(chat.get_chat_response(" ".join(args.prompt))["message"])
 
 
 def chatgpt_login():
