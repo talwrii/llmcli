@@ -2,7 +2,7 @@ import setuptools
 import distutils.core
 
 setuptools.setup(
-    name="llmcli",
+    name="large-language-model-cli",
     version=0.1,
     author="Talwrii",
     author_email="Talwrii@googlemail.com",
