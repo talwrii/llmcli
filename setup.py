@@ -3,8 +3,9 @@ import distutils.core
 
 setuptools.setup(
     name="large-language-model-cli",
-    version=0.3,
+    version=0.4,
     author="Talwrii",
+    long_description_content_type="text/markdown",
     author_email="Talwrii@googlemail.com",
     description="Command-line for interacting with large language models. not TUI. chatgpt",
     license="mit",
