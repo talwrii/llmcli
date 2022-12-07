@@ -3,7 +3,7 @@ import distutils.core
 
 setuptools.setup(
     name="large-language-model-cli",
-    version=0.6,
+    version=0.7,
     author="Talwrii",
     long_description_content_type="text/markdown",
     author_email="Talwrii@googlemail.com",
