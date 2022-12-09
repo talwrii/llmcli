@@ -1,3 +1,4 @@
+import sys
 import argparse
 import getpass
 import json
@@ -5,26 +6,46 @@ import os
 
 from revChatGPT.revChatGPT import Chatbot
 
-PARSER = argparse.ArgumentParser(
-    description="Run large language models from the command-line"
-)
-parsers = PARSER.add_subparsers(dest="command")
-chatgpt_parser = parsers.add_parser(
-    "chatgpt", help="Set a prompt to a large language model"
-)
-chatgpt_parser.add_argument("--login", action="store_true", help="Login to the API")
-chatgpt_parser.add_argument("prompt", help="Prompt to the model", nargs="*")
+
+def main_parser():
+    parser = argparse.ArgumentParser(
+        description="Run large language models from the command-line"
+    )
+    parsers = parser.add_subparsers(dest="command")
+    chatgpt_parser = parsers.add_parser(
+        "chatgpt", help="Set a prompt to a large language model"
+    )
+    chatgpt_config(chatgpt_parser)
+    return parser
+
+
+def chatgpt_config(parser):
+    parser.add_argument("--login", action="store_true", help="Login to the API")
+    parser.add_argument(
+        "--read-credentials-stdin",
+        action="store_true",
+        help="Read credentials from standard in in JSON",
+    )
+    parser.add_argument("prompt", help="Prompt to the model", nargs="*")
 
 
 def main():
-    args = PARSER.parse_args()
+    parser = main_parser()
+    args = main_parser().parse_args()
 
     if args.command is None:
-        PARSER.print_help()
+        parser.print_help()
     elif args.command == "chatgpt":
         chatgpt(args)
     else:
         raise ValueError(args.command)
+
+
+def chatgpt_main():
+    parser = argparse.ArgumentParser(description="chatgpt interface")
+    chatgpt_config(parser)
+    args = parser.parse_args()
+    chatgpt(args)
 
 
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "llmcli")
@@ -40,11 +61,24 @@ def chatgpt(args):
         if os.path.isfile(SESSION_FILE):
             os.remove(SESSION_FILE)
 
-    chat = chatgpt_login()
+    chat = chatgpt_login(args.read_credentials_stdin)
     print(chat.get_chat_response(" ".join(args.prompt))["message"])
 
 
-def chatgpt_login():
+def prompt_credentials():
+    email = input("Email:")
+    password = getpass.getpass()
+    return dict(email=email, password=password)
+
+
+def read_credentials_from_stdin():
+    d = json.loads(sys.stdin.read())
+    assert set(d.keys()) == {"email", "password"}
+    assert set(map(type, d.values())) == {str}
+    return d
+
+
+def chatgpt_login(read_credentials=False):
     # Get the session
     if os.path.isfile(SESSION_FILE):
         chat = Chatbot(config={})
@@ -52,10 +86,11 @@ def chatgpt_login():
             session = json.load(f)
         chatgpt_set_session(chat, session)
     else:
-        email = input("Email:")
-        password = getpass.getpass()
-        d = dict(email=email, password=password)
-        chat = Chatbot(config=d)
+        if read_credentials:
+            config = read_credentials_from_stdin()
+        else:
+            config = prompt_credentials()
+        chat = Chatbot(config=config)
         chat.refresh_session()
         session = chatgpt_extract_session(chat)
         with open(SESSION_FILE, "w") as f:
